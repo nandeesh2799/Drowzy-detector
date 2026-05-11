@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Drowsy Detector</title>
+<style>
+  body { margin: 0; background: #111; color: #eee; font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  h1 { margin: 0 0 10px; }
+  #wrap { position: relative; width: 640px; max-width: 100%; }
+  video, canvas { width: 100%; border-radius: 8px; display: block; }
+  canvas { position: absolute; inset: 0; }
+  #status { margin-top: 12px; font-size: 20px; padding: 8px 16px; border-radius: 6px; background: #2a7; }
+  #status.drowsy { background: #c33; animation: flash 0.5s infinite alternate; }
+  @keyframes flash { to { background: #f55; } }
+  #stats { margin-top: 8px; font-family: monospace; color: #aaa; }
+  button { margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>Drowsy Detector</h1>
+<button id="startBtn">Start Camera</button>
+<div id="wrap">
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="overlay"></canvas>
+</div>
+<div id="status">Awake</div>
+<div id="stats">EAR: —</div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

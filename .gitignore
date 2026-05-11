@@ -1,0 +1,20 @@
+# Python
+.venv/
+__pycache__/
+
+# ML Models
+*.task
+
+# Logs & env
+.env
+*.log
+
+# Node
+node_modules/
+
+# Generated data
+data/events/
+data/session_logs/
+
+# Media
+*.mp4
