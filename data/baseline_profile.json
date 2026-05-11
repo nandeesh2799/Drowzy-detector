@@ -1,8 +1,8 @@
 {
-  "ear_baseline": 0.5989883797782141,
-  "ear_threshold": 0.44924128483366055,
-  "blink_rate_baseline": 0.0,
+  "ear_baseline": 0.28,
+  "ear_threshold": 0.21000000000000002,
+  "blink_rate_baseline": 18.0,
   "gaze_yaw_threshold": 24.0,
-  "head_pitch_baseline": 177.94326523261873,
-  "head_yaw_baseline": -2.4527074069141532
+  "head_pitch_baseline": 0.0,
+  "head_yaw_baseline": 0.0
 }

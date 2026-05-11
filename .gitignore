@@ -1,20 +1,22 @@
 # Python
 .venv/
 __pycache__/
+*.pyc
 
 # ML Models
 *.task
 
-# Logs & env
+# Logs & Environment
 .env
 *.log
 
 # Node
 node_modules/
 
-# Generated data
+# Generated Data
 data/events/
 data/session_logs/
+data/baseline_profile.json
 
 # Media
 *.mp4

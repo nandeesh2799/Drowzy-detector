@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import replace
 from pathlib import Path
+import platform
 import time
 
 import cv2
@@ -136,25 +137,10 @@ def ensure_state() -> None:
         "eye_closed_streak": 0,
         "head_tilt_streak": 0,
         "eye_closed_start_ts": None,
-        "camera_index": 0,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
-
-
-@st.cache_data(ttl=30)
-def get_available_cameras():
-    # Only check first 4 ports to keep it snappy
-    working_ports = []
-    for i in range(4):
-        cap = cv2.VideoCapture(i)
-        if cap.isOpened():
-            ret, _ = cap.read()
-            if ret:
-                working_ports.append(i)
-            cap.release()
-    return working_ports
 
 
 def ensure_alert_manager_compat() -> None:
@@ -263,9 +249,18 @@ def run_live_monitor() -> None:
         trend_slot = b1.empty()
         blink_slot = b2.empty()
 
-    cap = cv2.VideoCapture(st.session_state.camera_index)
+    # Detect platform for optimal backend
+    system = platform.system()
+    backend = cv2.CAP_ANY
+    if system == "Darwin":
+        backend = cv2.CAP_AVFOUNDATION
+    elif system == "Windows":
+        backend = cv2.CAP_DSHOW
+
+    # Default to camera index 0 (or change here if your phone is on another port)
+    cap = cv2.VideoCapture(0, backend)
     if not cap.isOpened():
-        st.error(f"Unable to access webcam at index {st.session_state.camera_index}.")
+        st.error("Unable to access webcam.")
         st.session_state.running = False
         return
     
@@ -530,29 +525,13 @@ def main() -> None:
     ensure_alert_manager_compat()
 
     st.markdown('<div class="control-bar">', unsafe_allow_html=True)
-    h1, h2, h3, h4 = st.columns([2, 1, 1, 1], gap="small")
+    h1, h2, h3 = st.columns([3, 1, 1], gap="small")
     with h1:
         st.markdown("## Intelligent Driver Monitoring System")
     with h2:
-        cameras = get_available_cameras()
-        if not cameras:
-            st.error("No cameras detected")
-            default_idx = 0
-        else:
-            default_idx = cameras.index(st.session_state.camera_index) if st.session_state.camera_index in cameras else 0
-        
-        selected_cam = st.selectbox(
-            "Camera",
-            options=cameras if cameras else [0],
-            index=default_idx,
-            key="camera_select_box",
-            disabled=st.session_state.running
-        )
-        st.session_state.camera_index = selected_cam
-    with h3:
         if st.button("Start Session", use_container_width=True, disabled=st.session_state.running):
             start_session()
-    with h4:
+    with h3:
         if st.button("Stop Session", use_container_width=True, disabled=not st.session_state.running):
             stop_session()
     st.markdown('</div>', unsafe_allow_html=True)
