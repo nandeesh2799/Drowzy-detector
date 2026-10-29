@@ -1,10 +1,19 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+import os
 import time
 
-import cv2
-import mediapipe as mp
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
+try:
+    import mediapipe as mp
+except ImportError:
+    mp = None
+
 import numpy as np
 
 
@@ -18,14 +27,15 @@ class FaceDetectionEngine:
     ) -> None:
         self._face_mesh = None
         self._landmarker = None
-        self._use_tasks_api = hasattr(mp, "tasks")
         self._last_video_ts_ms = 0
+
+        model_path = "face_landmarker.task"
+        self._use_tasks_api = bool(mp and hasattr(mp, "tasks") and os.path.exists(model_path))
 
         if self._use_tasks_api:
             from mediapipe.tasks.python import vision
             from mediapipe.tasks.python.core.base_options import BaseOptions
 
-            model_path = "face_landmarker.task"
             options = vision.FaceLandmarkerOptions(
                 base_options=BaseOptions(model_asset_path=model_path),
                 running_mode=vision.RunningMode.VIDEO,
@@ -36,8 +46,8 @@ class FaceDetectionEngine:
                 output_facial_transformation_matrixes=False,
             )
             self._landmarker = vision.FaceLandmarker.create_from_options(options)
-        else:
-            # Legacy path for older mediapipe packages.
+        elif mp and hasattr(mp, "solutions") and hasattr(mp.solutions, "face_mesh"):
+            # Legacy path for bundled mediapipe models.
             self._mp_face_mesh = mp.solutions.face_mesh
             self._face_mesh = self._mp_face_mesh.FaceMesh(
                 static_image_mode=False,

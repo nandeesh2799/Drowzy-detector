@@ -1,69 +1,119 @@
-# Intelligent Driver Monitoring System
+# 🚗 Intelligent Driver Monitoring System (DMS)
 
-AI-powered real-time drowsiness and distraction detection system using MediaPipe and Streamlit. Works across Linux, macOS, and Windows.
+[![CI Pipeline](https://github.com/nandeesh2799/Drowzy-detector/actions/workflows/ci.yml/badge.svg)](https://github.com/nandeesh2799/Drowzy-detector/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-5C3EE8?logo=opencv&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B?logo=streamlit&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-12%20Passed-brightgreen?logo=pytest)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-## Features
-- **Fatigue Detection:** Real-time monitoring of Eye Aspect Ratio (EAR) and Blink Rate.
-- **Distraction Detection:** Head pose (Yaw/Pitch) and Gaze-away tracking.
-- **Predictive Analytics:** Estimates when fatigue might become critical based on trends.
-- **Explainable AI:** Provides reasons for alerts (e.g., "Frequent yawning", "Long eye closure").
-- **Session Reports:** Automatic logging of events and session summaries.
-- **Cross-Platform:** Optimized camera backends for all major operating systems.
+An enterprise-grade, real-time **Driver Monitoring System (DMS)** engineered with **MediaPipe**, **OpenCV**, and **Streamlit**. Designed for edge automotive compute, fleet management, and vehicle safety, the system provides multi-factor fatigue scoring, off-road distraction detection, predictive time-to-critical forecasting, explainable alerts, and rolling event video recording.
 
-## Prerequisites
-- Python 3.10 or higher.
-- Webcam (Integrated or External).
+---
 
-## Setup & Installation
+## ⚡ Core Capabilities
 
-### 1. Download MediaPipe Model
-This project requires the `face_landmarker.task` model file.
-1. Download it from [MediaPipe Google Developers](https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task).
-2. Place the file in the root directory of this project.
+- **Fatigue & Drowsiness Tracking**: Computes real-time **Eye Aspect Ratio (EAR)**, blink frequency, and micro-sleep duration.
+- **Yawn Detection**: Calculates **Mouth Aspect Ratio (MAR)** to identify prolonged yawning episodes.
+- **3D Head Pose & Distraction**: Utilizes `cv2.solvePnP` to estimate head pitch and yaw to detect off-road glances, mobile phone usage, and driver slumping.
+- **Predictive Risk Forecasting**: Employs an exponential moving average (EMA) linear slope model to project driver fatigue risk 1-5 minutes in advance.
+- **Transparent Explainable AI (XAI)**: Generates human-interpretable root causes for alerts (e.g., `CRITICAL: Eye Closure 65% + Yawning 35% (EAR 0.12, MAR 0.85)`).
+- **Incident Blackbox Ring-Buffer**: Automatically records 12-second annotated video clips when critical safety thresholds are breached.
+- **Dynamic Calibration**: Learns the driver's unique facial baseline (EAR, blink rate, neutral head pose) within 10 seconds of startup.
+- **Resilient Model Architecture**: Dynamically detects MediaPipe Tasks API (`face_landmarker.task`) with automatic fallback to bundled face mesh models.
 
-### 2. Virtual Environment Setup
+---
+
+## 🏗️ Architecture & Signal Pipeline
+
+```
+  ┌─────────────────┐      Auto-Brightness
+  │   Video Stream  │ ───────────────────────► [ Brightness Normalizer ]
+  └────────┬────────┘                                  │
+           │                                           ▼
+           │                                 ┌───────────────────┐
+           └────────────────────────────────►│ Face & Landmarks  │
+                                             └─────────┬─────────┘
+                                                       │
+         ┌──────────────────────────────┬──────────────┴────────────────┬──────────────────────────────┐
+         ▼                              ▼                               ▼                              ▼
+  [ EAR / Blinks ]               [ MAR / Yawns ]               [ solvePnP 3D Pose ]            [ Gaze Vector ]
+         │                              │                               │                              │
+         └──────────────────────────────┼───────────────────────────────┴──────────────────────────────┘
+                                        ▼
+                         ┌─────────────────────────────┐
+                         │    Fatigue / Distraction    │
+                         │       Fusion Engine         │
+                         └──────────────┬──────────────┘
+                                        │
+             ┌──────────────────────────┼──────────────────────────┐
+             ▼                          ▼                          ▼
+   [ Predictive Forecast ]    [ Explainability XAI ]     [ Blackbox Event Clip ]
+             │                          │                          │
+             └──────────────────────────┼──────────────────────────┘
+                                        ▼
+                         ┌─────────────────────────────┐
+                         │   Streamlit Telemetry UI    │
+                         └─────────────────────────────┘
+```
+
+---
+
+## 🧪 Testing & Verification
+
+The suite includes comprehensive unit tests verifying geometric calculation of EAR, MAR, temporal blink edge detection, fatigue state transitions, distraction thresholds, predictive slope modeling, calibration persistence, and auto-brightness:
+
 ```bash
-# Clone the repository
-git clone <your-repo-url>
-cd drowsy-detector-mediapipe
+# Run test suite
+python3 -m pytest tests/ -v
+```
+
+---
+
+## 🚀 Quickstart & Installation
+
+### Option 1: Native Environment
+
+```bash
+# Clone repository
+git clone https://github.com/nandeesh2799/Drowzy-detector.git
+cd Drowzy-detector
 
 # Create virtual environment
-python -m venv .venv
-
-# Activate environment
-# On Linux/macOS:
+python3 -m venv .venv
 source .venv/bin/activate
-# On Windows:
-.venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Run DMS Application
+python3 run.py
 ```
 
-### 3. Run the App
+### Option 2: Docker Containerization
+
+Run the application inside a reproducible Docker container:
+
 ```bash
-python run.py
+# Build and run with Docker Compose
+docker compose up --build
+
+# Open browser at http://localhost:8501
 ```
-Then open the local URL provided by Streamlit (usually `http://localhost:8501`).
 
-## Platform-Specific Notes
+---
 
-### macOS
-- **Permissions:** You may need to grant "Camera" and "Microphone" (for TTS) permissions to your terminal or IDE (e.g., VS Code/Terminal) in `System Settings > Security & Privacy`.
-- **Backend:** Uses `AVFOUNDATION` for low-latency capture.
+## 👨‍💻 Author & Engineering Showcase
 
-### Windows
-- **Backend:** Uses `DirectShow` (DSHOW) for reliable camera initialization.
-- **Audio:** Ensure your default audio device is active for voice alerts.
+**Nandeesh N K**  
+Full-Stack Developer & AI Systems Engineer — Bengaluru, India  
+- 🌐 **Interactive Portfolio:** [NandeeshOS (Live Demo)](https://nandeesh2799-portfolio.vercel.app)
+- 💼 **LinkedIn:** [linkedin.com/in/nandeesh-n-k-729773270](https://linkedin.com/in/nandeesh-n-k-729773270)
+- 🐙 **GitHub Profile:** [github.com/nandeesh2799](https://github.com/nandeesh2799)
+- 📫 **Direct Email:** [nandeeshnk506@gmail.com](mailto:nandeeshnk506@gmail.com)
 
-### Linux
-- **Backend:** Uses standard V4L2 backend.
-- **Dependencies:** May require `libgl1` (e.g., `sudo apt-get install libgl1`).
+---
 
-## Troubleshooting
-- **No Camera Detected:** Ensure no other app (Zoom, Teams) is using the camera. Try changing the "Camera" index in the UI.
-- **Low FPS:** Reduce browser load or ensure your laptop is plugged into power.
-- **Lag:** The app includes optimizations like reduced buffer size and throttled graph updates. If lag persists, try a lower resolution webcam.
-
-## License
-MIT
+## 📄 License
+This project is licensed under the MIT License.
